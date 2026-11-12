@@ -1,0 +1,23 @@
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+
+# Dataset and models: large, not for Git
+backend/data/raw/*
+backend/data/processed/*
+backend/models/*
+!backend/data/raw/.gitkeep
+!backend/data/processed/.gitkeep
+!backend/models/.gitkeep
+
+# Android
+android/**/build/
+android/.gradle/
+android/local.properties
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
