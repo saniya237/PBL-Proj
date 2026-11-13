@@ -1,0 +1,9 @@
+{
+  "id": "WEB001",
+  "name": "Web Server",
+  "type": "server",
+  "status": "normal",
+  "connected_to": [
+    "SW001"
+  ]
+}
