@@ -1,11 +1,11 @@
+
 package com.example.nextwin.data
 
 import android.content.Context
 
 /**
- * Loads SAMPLE data bundled inside the app (assets folder).
- * Used for building the screens before the backend is connected.
- * This is placeholder data, not live detections.
+ * Loads SAMPLE data bundled inside the app.
+ * This is placeholder data, not live detections or real campus traffic.
  */
 class SampleRepository(private val context: Context) {
 
@@ -14,4 +14,9 @@ class SampleRepository(private val context: Context) {
 
     fun loadTopology(): Topology =
         JsonParser.parseTopology(readAsset("topology.json"))
+
+    fun loadSampleSimulation(): SimulationResponse =
+        JsonParser.parseSimulationResponse(
+            readAsset("simulation_disconnect_SW002.json")
+        )
 }
