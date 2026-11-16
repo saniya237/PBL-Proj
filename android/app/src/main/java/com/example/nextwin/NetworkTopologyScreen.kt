@@ -2,27 +2,20 @@
 package com.example.nextwin
 
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -30,9 +23,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +49,11 @@ private val nodePositions = mapOf(
     "LAP001" to Pair(0.94f, 0.66f)
 )
 
+private val HeadingWhite = Color(0xFFF1F7FF)
+private val SubText = Color(0xFFB0C4DE)
+private val AccentCyan = Color(0xFF38BDF8)
+private val CardBlue = Color(0xFF142B47)
+
 private fun statusColor(status: String): Color {
     return when (status.lowercase()) {
         "normal" -> Color(0xFF35C979)
@@ -79,36 +74,38 @@ fun NetworkTopologyScreen(
     }
 
     Column(
-    modifier = modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .padding(16.dp)
-) {
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+
         Text(
             text = "Network Topology",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = HeadingWhite
         )
 
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = "Simulated Campus Network",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = SubText
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = "SAMPLE NETWORK",
-            color = MaterialTheme.colorScheme.primary,
+            color = AccentCyan,
             fontWeight = FontWeight.Bold,
-            fontSize = 12.sp
+            fontSize = 13.sp
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Network visualization
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
@@ -118,6 +115,7 @@ fun NetworkTopologyScreen(
 
                         val tappedDevice = topology.devices
                             .mapNotNull { device ->
+
                                 val position = nodePositions[device.id]
                                     ?: return@mapNotNull null
 
@@ -126,7 +124,7 @@ fun NetworkTopologyScreen(
 
                                 val distance = sqrt(
                                     (tap.x - x).pow(2) +
-                                    (tap.y - y).pow(2)
+                                        (tap.y - y).pow(2)
                                 )
 
                                 Pair(device, distance)
@@ -138,15 +136,17 @@ fun NetworkTopologyScreen(
                     }
                 }
         ) {
+
             val nodeRadius = 28f
 
-            // Draw actual connections from topology JSON
+            // Draw network connections
             topology.links.forEach { link ->
 
                 val source = nodePositions[link.source]
                 val target = nodePositions[link.target]
 
                 if (source != null && target != null) {
+
                     drawLine(
                         color = Color(0xFF607D8B),
                         start = Offset(
@@ -173,43 +173,76 @@ fun NetworkTopologyScreen(
                     position.second * size.height
                 )
 
-                val color = statusColor(device.status)
+                val deviceColor = statusColor(device.status)
 
-                // Device circle
                 drawCircle(
-                    color = color,
+                    color = deviceColor,
                     radius = nodeRadius,
                     center = center
                 )
 
                 // Selected device outline
                 if (selectedDevice?.id == device.id) {
+
                     drawCircle(
-                        color = Color.White,
+                        color = AccentCyan,
                         radius = nodeRadius + 7f,
                         center = center,
                         style = Stroke(width = 5f)
                     )
                 }
 
-                // Draw device ID below node
+                // Device ID label
                 drawIntoCanvas { canvas ->
 
                     val paint = Paint().apply {
                         isAntiAlias = true
                         textAlign = Paint.Align.CENTER
-                        textSize = 23f
-                        setColor(android.graphics.Color.WHITE)
+                        textSize = 19f
+
+                        setColor(
+                            android.graphics.Color.rgb(35, 45, 60)
+                        )
+
                         typeface = Typeface.create(
-                        Typeface.DEFAULT,
-                        Typeface.BOLD
+                            Typeface.DEFAULT,
+                            Typeface.BOLD
                         )
                     }
 
+                    val label = device.id
+                    val textWidth = paint.measureText(label)
+
+                    val padding = 9f
+                    val labelX = center.x
+                    val labelY = center.y + 54f
+
+                    val backgroundPaint = Paint().apply {
+                        isAntiAlias = true
+
+                        setColor(
+                            android.graphics.Color.rgb(235, 239, 250)
+                        )
+                    }
+
+                    val rect = RectF(
+                        labelX - textWidth / 2 - padding,
+                        labelY - 21f,
+                        labelX + textWidth / 2 + padding,
+                        labelY + 8f
+                    )
+
+                    canvas.nativeCanvas.drawRoundRect(
+                        rect,
+                        10f,
+                        10f,
+                        backgroundPaint
+                    )
+
                     canvas.nativeCanvas.drawText(
-                        device.id,
-                        center.x,
-                        center.y + 53f,
+                        label,
+                        labelX,
+                        labelY,
                         paint
                     )
                 }
@@ -237,39 +270,71 @@ fun NetworkTopologyScreen(
             LegendItem("Disconnected", Color(0xFF909090))
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Selected device details
         selectedDevice?.let { device ->
 
             Card(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = CardBlue
+                )
             ) {
+
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(18.dp)
                 ) {
+
                     Text(
                         text = "Selected Device",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleLarge,
+                        color = AccentCyan
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("ID: ${device.id}")
-                    Text("Name: ${device.name}")
-                    Text("Type: ${device.type}")
-                    Text("Status: ${device.status}")
+                    DeviceDetail("Device ID", device.id)
+                    DeviceDetail("Name", device.name)
+                    DeviceDetail("Type", device.type)
+                    DeviceDetail("Status", device.status)
 
-                    Text(
-                        text = "Connected to: ${
-                            device.connectedTo.joinToString(", ")
-                        }"
+                    DeviceDetail(
+                        "Connected To",
+                        device.connectedTo.joinToString(", ")
                     )
                 }
             }
+
         } ?: Text(
-            text = "Tap any network device to view its details."
+            text = "Tap any network device to view its details.",
+            color = SubText,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun DeviceDetail(
+    title: String,
+    value: String
+) {
+    Column(
+        modifier = Modifier.padding(vertical = 5.dp)
+    ) {
+        Text(
+            text = title,
+            color = SubText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
+
+        Text(
+            text = value,
+            color = HeadingWhite,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
@@ -279,7 +344,9 @@ private fun LegendItem(
     label: String,
     color: Color
 ) {
-    Row {
+    Row(
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
         Surface(
             modifier = Modifier
                 .width(12.dp)
@@ -288,11 +355,12 @@ private fun LegendItem(
             color = color
         ) {}
 
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(7.dp))
 
         Text(
             text = label,
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            color = HeadingWhite
         )
     }
 }

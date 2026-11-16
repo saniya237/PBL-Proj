@@ -3,14 +3,19 @@ package com.example.nextwin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.nextwin.data.ApiClient
 import com.example.nextwin.data.SimulationResult
 import com.example.nextwin.data.Topology
+import kotlinx.coroutines.launch
 
 private data class ScenarioOption(
     val id: String,
@@ -23,6 +28,14 @@ private val scenarios = listOf(
     ScenarioOption("isolate", "Isolate Device"),
     ScenarioOption("restore", "Restore Device")
 )
+
+private val SimBackground = Color(0xFF081729)
+private val SimCard = Color(0xFF142B47)
+private val SimCyan = Color(0xFF38BDF8)
+private val SimWhite = Color(0xFFF1F7FF)
+private val SimMuted = Color(0xFFB0C4DE)
+private val SimGreen = Color(0xFF35C979)
+private val SimRed = Color(0xFFFF647C)
 
 @Composable
 fun SimulationScreen(
@@ -47,133 +60,320 @@ fun SimulationScreen(
         mutableStateOf<SimulationResult?>(null)
     }
 
+    var isRunning by remember { mutableStateOf(false) }
+
+    var errorMessage by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val selectedDevice = topology.devices.firstOrNull {
+        it.id == selectedDeviceId
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(20.dp)
     ) {
+
         Text(
-            "What-if Simulation",
+            text = "What-if Simulation",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = SimWhite
         )
 
         Spacer(Modifier.height(8.dp))
 
         Text(
-            "LOCAL SIMULATION PREVIEW",
-            color = MaterialTheme.colorScheme.primary,
+            text = "NETWORKX BACKEND SIMULATION",
+            color = SimCyan,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold
         )
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
+
+        // Simulation information
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = SimCard
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp)
+            ) {
+                Text(
+                    "SIMULATION CONTROL CENTER",
+                    color = SimCyan,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                Text(
+                    "Test how network devices affect campus connectivity.",
+                    color = SimWhite,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
 
         Text(
             "Select Device",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = SimWhite
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
 
+        // Device selection
         Box {
             OutlinedButton(
                 onClick = { deviceMenuExpanded = true },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = SimWhite
+                )
             ) {
                 Text(
-                    topology.devices.firstOrNull {
-                        it.id == selectedDeviceId
-                    }?.let { "${it.name} (${it.id})" } ?: "Select device"
+                    selectedDevice?.let {
+                        "${it.name} (${it.id})"
+                    } ?: "Select device"
                 )
             }
 
             DropdownMenu(
                 expanded = deviceMenuExpanded,
-                onDismissRequest = { deviceMenuExpanded = false }
+                onDismissRequest = { deviceMenuExpanded = false },
+                containerColor = SimCard
             ) {
                 topology.devices.forEach { device ->
                     DropdownMenuItem(
                         text = {
-                            Text("${device.name} (${device.id})")
+                            Text(
+                                "${device.name} (${device.id})",
+                                color = SimWhite
+                            )
                         },
                         onClick = {
                             selectedDeviceId = device.id
                             deviceMenuExpanded = false
                             result = null
+                            errorMessage = null
                         }
                     )
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(22.dp))
 
         Text(
             "Select Scenario",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = SimWhite
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
 
+        // Scenario selection
         Box {
             OutlinedButton(
                 onClick = { scenarioMenuExpanded = true },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = SimWhite
+                )
             ) {
                 Text(selectedScenario.label)
             }
 
             DropdownMenu(
                 expanded = scenarioMenuExpanded,
-                onDismissRequest = { scenarioMenuExpanded = false }
+                onDismissRequest = { scenarioMenuExpanded = false },
+                containerColor = SimCard
             ) {
                 scenarios.forEach { scenario ->
                     DropdownMenuItem(
-                        text = { Text(scenario.label) },
+                        text = {
+                            Text(
+                                scenario.label,
+                                color = SimWhite
+                            )
+                        },
                         onClick = {
                             selectedScenario = scenario
                             scenarioMenuExpanded = false
                             result = null
+                            errorMessage = null
                         }
                     )
                 }
             }
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
 
+        // Run simulation
         Button(
             onClick = {
-                val calculated = calculateLocalSimulation(
-                    topology = topology,
-                    currentStatuses = deviceStatuses,
-                    deviceId = selectedDeviceId,
-                    scenario = selectedScenario.id
+                coroutineScope.launch {
+                    isRunning = true
+                    errorMessage = null
+                    result = null
+
+                    try {
+                        val response = ApiClient.runSimulation(
+                            deviceId = selectedDeviceId,
+                            scenario = selectedScenario.id
+                        )
+
+                        result = response.result
+
+                        val updatedStatuses =
+                            response.topology.devices.associate {
+                                it.id to it.status
+                            }
+
+                        onDeviceStatusesChange(updatedStatuses)
+
+                    } catch (e: Exception) {
+                        errorMessage =
+                            e.message ?: "Simulation failed"
+                    } finally {
+                        isRunning = false
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp),
+            enabled = selectedDeviceId.isNotBlank() && !isRunning,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = SimCyan,
+                contentColor = SimBackground,
+                disabledContainerColor = SimCard,
+                disabledContentColor = SimMuted
+            )
+        ) {
+            if (isRunning) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    strokeWidth = 2.dp,
+                    color = SimBackground
                 )
 
-                result = calculated.first
-                onDeviceStatusesChange(calculated.second)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = selectedDeviceId.isNotBlank()
-        ) {
-            Text("Run Simulation")
+                Spacer(Modifier.width(10.dp))
+
+                Text("Running Simulation...")
+            } else {
+                Text(
+                    "Run Simulation",
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(12.dp))
 
+        // Clear result
         OutlinedButton(
             onClick = {
-                onDeviceStatusesChange(originalDeviceStatuses)
                 result = null
+                errorMessage = null
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            enabled = !isRunning,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = SimMuted
+            )
         ) {
-            Text("Reset Simulation")
+            Text("Clear Result")
+        }
+
+        // Error display
+        errorMessage?.let { error ->
+            Spacer(Modifier.height(16.dp))
+
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF482331)
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(
+                    text = "Simulation Error: $error",
+                    modifier = Modifier.padding(16.dp),
+                    color = Color(0xFFFFA6B5)
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Selected device information
+        selectedDevice?.let { device ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = SimCard
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp)
+                ) {
+                    Text(
+                        "SELECTED DEVICE",
+                        color = SimCyan,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        device.name,
+                        color = SimWhite,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(Modifier.height(6.dp))
+
+                    Text(
+                        "Device ID: ${device.id}",
+                        color = SimMuted
+                    )
+
+                    Text(
+                        "Current Status: ${
+                            deviceStatuses[device.id] ?: device.status
+                        }",
+                        color = SimMuted
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(20.dp))
@@ -181,143 +381,34 @@ fun SimulationScreen(
         result?.let { simulationResult ->
             SimulationResultContent(simulationResult)
         } ?: Text(
-            "Select a device and scenario, then tap Run Simulation to view the predicted network impact.",
+            "Select a device and scenario, then tap Run Simulation to view the network impact.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = SimMuted
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        Text(
+            "Simulation results are generated by the Python FastAPI backend using the simulated NetworkX campus topology. They represent a what-if simulation, not a live campus network event.",
+            style = MaterialTheme.typography.bodySmall,
+            color = SimMuted
         )
 
         Spacer(Modifier.height(20.dp))
-
-        Text(
-            "This is a local Android preview calculated from the bundled simulated network topology. It does not contact the Python backend or represent a live campus network event. The actual NetworkX engine will be connected through FastAPI later.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
-}
-
-private fun calculateLocalSimulation(
-    topology: Topology,
-    currentStatuses: Map<String, String>,
-    deviceId: String,
-    scenario: String
-): Pair<SimulationResult, Map<String, String>> {
-
-    val device = topology.devices.first { it.id == deviceId }
-
-    val newStatus = when (scenario) {
-        "suspicious" -> "suspicious"
-        "disconnect" -> "disconnected"
-        "isolate" -> "isolated"
-        "restore" -> "normal"
-        else -> currentStatuses[deviceId] ?: "normal"
-    }
-
-    val before = reachableDevices(topology, currentStatuses)
-
-    val updatedStatuses = currentStatuses.toMutableMap()
-    val previousStatus = updatedStatuses[deviceId] ?: "normal"
-    updatedStatuses[deviceId] = newStatus
-
-    val after = reachableDevices(topology, updatedStatuses)
-
-    val lost = (before - after - deviceId).sorted()
-    val gained = (after - before - deviceId).sorted()
-
-    val directlyAffected = topology.links
-        .filter { it.source == deviceId || it.target == deviceId }
-        .map { if (it.source == deviceId) it.target else it.source }
-        .sorted()
-
-    val offline = updatedStatuses
-        .filterValues { it == "disconnected" || it == "isolated" }
-        .keys.sorted()
-
-    val summary = when (scenario) {
-        "suspicious" ->
-            "${device.name} (${deviceId}) is marked suspicious. It remains online, so connectivity is unchanged."
-
-        "disconnect" ->
-            "${device.name} (${deviceId}) was disconnected. ${lost.size} other device(s) lost internet connectivity."
-
-        "isolate" ->
-            "${device.name} (${deviceId}) was isolated. ${lost.size} other device(s) lost internet connectivity."
-
-        else ->
-            "${device.name} (${deviceId}) was restored to normal. ${gained.size} other device(s) regained internet connectivity."
-    }
-
-    return SimulationResult(
-        scenario = scenario,
-        deviceId = deviceId,
-        deviceName = device.name,
-        previousStatus = previousStatus,
-        newStatus = newStatus,
-        directlyAffected = directlyAffected,
-        lostConnectivity = lost,
-        gainedConnectivity = gained,
-        offlineDevices = offline,
-        reachableBefore = before.size,
-        reachableAfter = after.size,
-        summary = summary
-    ) to updatedStatuses
-}
-
-private fun reachableDevices(
-    topology: Topology,
-    statuses: Map<String, String>
-): Set<String> {
-
-    val internetId = "INET001"
-
-    if (statuses[internetId] == "disconnected" ||
-        statuses[internetId] == "isolated" ||
-        topology.devices.none { it.id == internetId }
-    ) {
-        return emptySet()
-    }
-
-    val onlineDevices = statuses
-        .filterValues { it != "disconnected" && it != "isolated" }
-        .keys
-
-    val visited = mutableSetOf<String>()
-    val queue = ArrayDeque<String>()
-
-    visited.add(internetId)
-    queue.add(internetId)
-
-    while (queue.isNotEmpty()) {
-        val current = queue.removeFirst()
-
-        topology.links.forEach { link ->
-            val neighbour = when (current) {
-                link.source -> link.target
-                link.target -> link.source
-                else -> null
-            }
-
-            if (neighbour != null &&
-                neighbour in onlineDevices &&
-                visited.add(neighbour)
-            ) {
-                queue.add(neighbour)
-            }
-        }
-    }
-
-    return visited - internetId
 }
 
 @Composable
 private fun SimulationResultContent(result: SimulationResult) {
+
     Text(
         "Simulation Result",
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold
+        style = MaterialTheme.typography.headlineSmall,
+        fontWeight = FontWeight.Bold,
+        color = SimWhite
     )
 
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(16.dp))
 
     InfoCard(
         "Selected Device",
@@ -331,12 +422,13 @@ private fun SimulationResultContent(result: SimulationResult) {
         "${result.previousStatus} → ${result.newStatus}"
     )
 
-    Spacer(Modifier.height(20.dp))
+    Spacer(Modifier.height(22.dp))
 
     Text(
         "Network Impact",
         style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        color = SimCyan
     )
 
     Spacer(Modifier.height(12.dp))
@@ -360,23 +452,38 @@ private fun SimulationResultContent(result: SimulationResult) {
 
     Spacer(Modifier.height(12.dp))
 
-    DeviceListCard("Directly Affected Devices", result.directlyAffected)
+    DeviceListCard(
+        "Directly Affected Devices",
+        result.directlyAffected
+    )
 
     Spacer(Modifier.height(12.dp))
 
-    DeviceListCard("Lost Connectivity", result.lostConnectivity)
+    DeviceListCard(
+        "Lost Connectivity",
+        result.lostConnectivity
+    )
 
     Spacer(Modifier.height(12.dp))
 
-    DeviceListCard("Offline Devices", result.offlineDevices)
+    DeviceListCard(
+        "Offline Devices",
+        result.offlineDevices
+    )
 
     Spacer(Modifier.height(12.dp))
 
-    DeviceListCard("Gained Connectivity", result.gainedConnectivity)
+    DeviceListCard(
+        "Gained Connectivity",
+        result.gainedConnectivity
+    )
 
     Spacer(Modifier.height(12.dp))
 
-    InfoCard("Simulation Summary", result.summary)
+    InfoCard(
+        "Simulation Summary",
+        result.summary
+    )
 }
 
 @Composable
@@ -387,14 +494,28 @@ private fun InfoCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = SimCard
         )
     ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(title, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(content, style = MaterialTheme.typography.bodyLarge)
+        Column(
+            modifier = Modifier.padding(18.dp)
+        ) {
+            Text(
+                title,
+                fontWeight = FontWeight.Bold,
+                color = SimCyan,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Text(
+                content,
+                style = MaterialTheme.typography.bodyLarge,
+                color = SimWhite
+            )
         }
     }
 }
@@ -406,6 +527,10 @@ private fun DeviceListCard(
 ) {
     InfoCard(
         title = title,
-        content = if (devices.isEmpty()) "None" else devices.joinToString(", ")
+        content = if (devices.isEmpty()) {
+            "None"
+        } else {
+            devices.joinToString(", ")
+        }
     )
 }

@@ -21,3 +21,11 @@ android/local.properties
 # OS
 .DS_Store
 Thumbs.db
+# Temporary NexTwin testing files
+backend/get_test_samples.py
+backend/normal_sample.json
+backend/malicious_sample.json
+backend/test_malicious_row.py
+
+# Local VS Code settings
+.vscode/
