@@ -1,0 +1,209 @@
+{
+  "result": {
+    "scenario": "disconnect",
+    "device_id": "SW002",
+    "device_name": "Lab Switch",
+    "previous_status": "normal",
+    "new_status": "disconnected",
+    "directly_affected": [
+      "CAM001",
+      "LAB001",
+      "LAB002",
+      "SW001"
+    ],
+    "lost_connectivity": [
+      "CAM001",
+      "LAB001",
+      "LAB002"
+    ],
+    "gained_connectivity": [],
+    "offline_devices": [
+      "SW002"
+    ],
+    "reachable_before": 12,
+    "reachable_after": 8,
+    "summary": "Lab Switch (SW002) was disconnected. 3 other device(s) lost internet connectivity."
+  },
+  "topology": {
+    "devices": [
+      {
+        "id": "INET001",
+        "name": "Internet",
+        "type": "cloud",
+        "status": "normal",
+        "connected_to": [
+          "GW001"
+        ]
+      },
+      {
+        "id": "GW001",
+        "name": "Default Gateway",
+        "type": "router",
+        "status": "normal",
+        "connected_to": [
+          "INET001",
+          "SW001"
+        ]
+      },
+      {
+        "id": "SW001",
+        "name": "Core Switch",
+        "type": "switch",
+        "status": "normal",
+        "connected_to": [
+          "ADMIN001",
+          "AP001",
+          "DNS001",
+          "FILE001",
+          "GW001",
+          "SW002",
+          "WEB001"
+        ]
+      },
+      {
+        "id": "WEB001",
+        "name": "Web Server",
+        "type": "server",
+        "status": "normal",
+        "connected_to": [
+          "SW001"
+        ]
+      },
+      {
+        "id": "DNS001",
+        "name": "DNS Server",
+        "type": "server",
+        "status": "normal",
+        "connected_to": [
+          "SW001"
+        ]
+      },
+      {
+        "id": "FILE001",
+        "name": "File Server",
+        "type": "server",
+        "status": "normal",
+        "connected_to": [
+          "SW001"
+        ]
+      },
+      {
+        "id": "ADMIN001",
+        "name": "Admin Server",
+        "type": "server",
+        "status": "normal",
+        "connected_to": [
+          "SW001"
+        ]
+      },
+      {
+        "id": "SW002",
+        "name": "Lab Switch",
+        "type": "switch",
+        "status": "disconnected",
+        "connected_to": [
+          "CAM001",
+          "LAB001",
+          "LAB002",
+          "SW001"
+        ]
+      },
+      {
+        "id": "AP001",
+        "name": "Wi-Fi Access Point",
+        "type": "access_point",
+        "status": "normal",
+        "connected_to": [
+          "LAP001",
+          "SW001"
+        ]
+      },
+      {
+        "id": "LAB001",
+        "name": "Lab Computer 1",
+        "type": "workstation",
+        "status": "normal",
+        "connected_to": [
+          "SW002"
+        ]
+      },
+      {
+        "id": "LAB002",
+        "name": "Lab Computer 2",
+        "type": "workstation",
+        "status": "normal",
+        "connected_to": [
+          "SW002"
+        ]
+      },
+      {
+        "id": "CAM001",
+        "name": "CCTV Camera",
+        "type": "iot_device",
+        "status": "normal",
+        "connected_to": [
+          "SW002"
+        ]
+      },
+      {
+        "id": "LAP001",
+        "name": "Student Laptop",
+        "type": "laptop",
+        "status": "normal",
+        "connected_to": [
+          "AP001"
+        ]
+      }
+    ],
+    "links": [
+      {
+        "source": "INET001",
+        "target": "GW001"
+      },
+      {
+        "source": "GW001",
+        "target": "SW001"
+      },
+      {
+        "source": "SW001",
+        "target": "WEB001"
+      },
+      {
+        "source": "SW001",
+        "target": "DNS001"
+      },
+      {
+        "source": "SW001",
+        "target": "FILE001"
+      },
+      {
+        "source": "SW001",
+        "target": "ADMIN001"
+      },
+      {
+        "source": "SW001",
+        "target": "SW002"
+      },
+      {
+        "source": "SW001",
+        "target": "AP001"
+      },
+      {
+        "source": "SW002",
+        "target": "LAB001"
+      },
+      {
+        "source": "SW002",
+        "target": "LAB002"
+      },
+      {
+        "source": "SW002",
+        "target": "CAM001"
+      },
+      {
+        "source": "AP001",
+        "target": "LAP001"
+      }
+    ]
+  }
+}
